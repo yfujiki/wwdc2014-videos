@@ -66,8 +66,14 @@ doc.css('li.session').each_with_index do |session, index|
     if (File.exists?(file))
       puts "File #{file} already exists. skipping..."
     else
-      File.open(file, "wb") do |f|
-       f.write HTTParty.get(url).parsed_response
+      begin
+        File.open(file, "wb") do |f|
+          f.write HTTParty.get(url).parsed_response
+        end
+      rescue #cleanup if fail
+        if File.exists?(file)
+          File.delete(file)
+        end
       end
     end
   end
