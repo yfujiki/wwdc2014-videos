@@ -1,7 +1,7 @@
 wwdc2014-videos
 ===============
 
-Download WWDC2014 videos under current directory. 
+Download WWDC2014 videos under current directory. It will skip already downloaded files.
 
 Usage
 ```
