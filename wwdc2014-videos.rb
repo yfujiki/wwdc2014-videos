@@ -46,11 +46,14 @@ end
 parse_options
 
 doc = Nokogiri::HTML(open('https://developer.apple.com/videos/wwdc/2014/'))
-doc.css('li.session').each do |session|
+
+total_count = doc.css('li.session').length
+
+doc.css('li.session').each_with_index do |session, index|
   title = session.css('li.title').first.child.to_s
   session_id = session['id'].to_i
   download = session.css('p.download').first
-  puts "Downloading Session #{session_id} \"#{title}\""
+  puts "Downloading #{index + 1}/#{total_count} : #{session_id} \"#{title}\""
   if (download)
     links = download.css('a')
     hash = links.each_with_object({}) do |link, hash|
