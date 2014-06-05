@@ -1,20 +1,49 @@
 require "nokogiri"
 require 'open-uri'
 require 'httparty'
+require 'optparse'
 
-def best_video_url(hash)
-  if (hash["HD"]) then
-    return "HD", hash["HD"]
-  elsif (hash["SD"]) then
-    return "SD", hash["SD"]
-  else
-    return nil
+def parse_quality_option
+  $quality = :SD
+  opt = OptionParser.new
+  opt.on('-q Preferred Quality (HD or SD)') { |q|
+    $quality = case q.downcase
+      when "sd" then :SD
+      when "hd" then :HD
+    end
+  }
+  opt.parse!(ARGV)
+end
+
+def parse_options
+  parse_quality_option
+end
+
+def video_url(hash)
+  if ($quality == :SD)
+    if(hash["SD"])
+      return "SD", hash["SD"]
+    else
+      return nil
+    end
+  end
+
+  if ($quality == :HD)
+    if (hash["HD"])
+      return "HD", hash["HD"]
+    elsif (hash["SD"])
+      return "SD", hash["SD"]
+    else
+      return nil
+    end
   end
 end
 
 def file_name_from(session_id, type, title)
-  "#{session_id}_#{type.to_s.downcase}_#{title.downcase.gsub(/ /, '_')}.mov"
+  "#{session_id}_#{type.downcase}_#{title.downcase.gsub(/ /, '_').gsub(/\'/, '')}.mov"
 end
+
+parse_options
 
 doc = Nokogiri::HTML(open('https://developer.apple.com/videos/wwdc/2014/'))
 doc.css('li.session').each do |session|
@@ -28,9 +57,9 @@ doc.css('li.session').each do |session|
       hash[link.child.to_s] = link['href']
     end
 
-    type, url = best_video_url(hash)
+    type, url = video_url(hash)
 
-    file = file_name_from(session_id, type, title)
+    file = file_name_from(session_id, type.to_s, title)
     if (File.exists?(file))
       puts "File #{file} already exists. skipping..."
     else
